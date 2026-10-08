@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16_alpine
+    container_name: practicar-postgres
+    restart: unless-stopped
+    enviroment:
+      POSTGRES_USER: ${DB_USER} 
+      POSTGRES_PASSWORD: ${DB_PASSWORD} 
+      POSTGRES_DB: ${DB_USER}
+    ports:
+      -"5432:5432"
+    volumes:
+      - aprender:/var/lib/postgressql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -u ${DB_USER} -D ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  
+  restaurant-api:
+    build: .
+    container: resturant-api-pratice
+    restart: unless-stopped
+    dependes_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_PORT: ${APP_PORT}
+      APP_NODE: ${APP_NODE}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      #Inside the Docker network Postgres is reached as "postgres", not "localhost"
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USER: ${DB_NAME}
+      OBSERVE_APP_KEY: ${OBSERVE_APP_KEY}
+      OBSERVE_APP_SECRET: ${OBSERVE_APP_SECRET}
+      OBSERVE_SERVICE_ID: ${OBSERVE_SERVICE_ID}
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+
+volumes:
+  postgres_data:
+      
